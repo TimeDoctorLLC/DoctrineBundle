@@ -2,31 +2,35 @@
 
 namespace Doctrine\Bundle\DoctrineBundle;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Filter\SQLFilter;
 
 /**
  * Configurator for an EntityManager
- *
- * @author Christophe Coevoet <stof@notk.org>
  */
 class ManagerConfigurator
 {
-    private $enabledFilters = array();
-    private $filtersParameters = array();
+    /** @var string[] */
+    private $enabledFilters = [];
 
+    /** @var string[] */
+    private $filtersParameters = [];
+
+    /**
+     * @param string[] $enabledFilters
+     * @param string[] $filtersParameters
+     */
     public function __construct(array $enabledFilters, array $filtersParameters)
     {
-        $this->enabledFilters = $enabledFilters;
+        $this->enabledFilters    = $enabledFilters;
         $this->filtersParameters = $filtersParameters;
     }
 
     /**
      * Create a connection by name.
      *
-     * @param EntityManager $entityManager
      */
-    public function configure(EntityManager $entityManager)
+    public function configure(EntityManagerInterface $entityManager)
     {
         $this->enableFilters($entityManager);
     }
@@ -34,9 +38,8 @@ class ManagerConfigurator
     /**
      * Enables filters for a given entity manager
      *
-     * @param EntityManager $entityManager
      */
-    private function enableFilters(EntityManager $entityManager)
+    private function enableFilters(EntityManagerInterface $entityManager)
     {
         if (empty($this->enabledFilters)) {
             return;
@@ -45,9 +48,11 @@ class ManagerConfigurator
         $filterCollection = $entityManager->getFilters();
         foreach ($this->enabledFilters as $filter) {
             $filterObject = $filterCollection->enable($filter);
-            if (null !== $filterObject) {
-                $this->setFilterParameters($filter, $filterObject);
+            if ($filterObject === null) {
+                continue;
             }
+
+            $this->setFilterParameters($filter, $filterObject);
         }
     }
 
@@ -59,11 +64,13 @@ class ManagerConfigurator
      */
     private function setFilterParameters($name, SQLFilter $filter)
     {
-        if (!empty($this->filtersParameters[$name])) {
-            $parameters = $this->filtersParameters[$name];
-            foreach ($parameters as $paramName => $paramValue) {
-                $filter->setParameter($paramName, $paramValue);
-            }
+        if (empty($this->filtersParameters[$name])) {
+            return;
+        }
+
+        $parameters = $this->filtersParameters[$name];
+        foreach ($parameters as $paramName => $paramValue) {
+            $filter->setParameter($paramName, $paramValue);
         }
     }
 }

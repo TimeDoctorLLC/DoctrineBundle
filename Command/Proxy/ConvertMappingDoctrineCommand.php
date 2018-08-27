@@ -1,21 +1,18 @@
 <?php
 
-
 namespace Doctrine\Bundle\DoctrineBundle\Command\Proxy;
 
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\ORM\Tools\Console\Command\ConvertMappingCommand;
+use Doctrine\ORM\Tools\Export\Driver\AbstractExporter;
 use Doctrine\ORM\Tools\Export\Driver\XmlExporter;
 use Doctrine\ORM\Tools\Export\Driver\YamlExporter;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Convert Doctrine ORM metadata mapping information between the various supported
  * formats.
- *
- * @author Fabien Potencier <fabien@symfony.com>
- * @author Jonathan H. Wage <jonwage@gmail.com>
  */
 class ConvertMappingDoctrineCommand extends ConvertMappingCommand
 {
@@ -44,11 +41,11 @@ class ConvertMappingDoctrineCommand extends ConvertMappingCommand
      * @param string $toType
      * @param string $destPath
      *
-     * @return \Doctrine\ORM\Tools\Export\Driver\AbstractExporter
+     * @return AbstractExporter
      */
     protected function getExporter($toType, $destPath)
     {
-        /** @var $exporter \Doctrine\ORM\Tools\Export\Driver\AbstractExporter */
+        /** @var AbstractExporter $exporter */
         $exporter = parent::getExporter($toType, $destPath);
         if ($exporter instanceof XmlExporter) {
             $exporter->setExtension('.orm.xml');
