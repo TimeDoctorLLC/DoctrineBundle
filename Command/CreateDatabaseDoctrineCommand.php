@@ -1,18 +1,14 @@
 <?php
 
-
 namespace Doctrine\Bundle\DoctrineBundle\Command;
 
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\DBAL\DriverManager;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Database tool allows you to easily drop and create your configured databases.
- *
- * @author Fabien Potencier <fabien@symfony.com>
- * @author Jonathan H. Wage <jonwage@gmail.com>
+ * Database tool allows you to easily create your configured databases.
  */
 class CreateDatabaseDoctrineCommand extends DoctrineCommand
 {
@@ -45,7 +41,7 @@ EOT
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $connectionName = $input->getOption('connection');
-        if (empty($connectionName) === true) {
+        if (empty($connectionName)) {
             $connectionName = $this->getContainer()->get('doctrine')->getDefaultConnectionName();
         }
         $connection = $this->getDoctrineConnection($connectionName);
@@ -66,7 +62,7 @@ EOT
             unset($params['global']['dbname']);
             if ($input->getOption('shard')) {
                 foreach ($shards as $i => $shard) {
-                    if ($shard['id'] === (int)$input->getOption('shard')) {
+                    if ($shard['id'] === (int) $input->getOption('shard')) {
                         // Select sharded database
                         $params = array_merge($params, $shard);
                         unset($params['shards'][$i]['dbname'], $params['id']);
@@ -77,8 +73,8 @@ EOT
         }
 
         $hasPath = isset($params['path']);
-        $name = $hasPath ? $params['path'] : (isset($params['dbname']) ? $params['dbname'] : false);
-        if (!$name) {
+        $name    = $hasPath ? $params['path'] : (isset($params['dbname']) ? $params['dbname'] : false);
+        if (! $name) {
             throw new \InvalidArgumentException("Connection does not contain a 'path' or 'dbname' parameter and cannot be dropped.");
         }
         // Need to get rid of _every_ occurrence of dbname from connection configuration and we have already extracted all relevant info from url
@@ -89,7 +85,7 @@ EOT
         $shouldNotCreateDatabase = $ifNotExists && in_array($name, $tmpConnection->getSchemaManager()->listDatabases());
 
         // Only quote if we don't have a path
-        if (!$hasPath) {
+        if (! $hasPath) {
             $name = $tmpConnection->getDatabasePlatform()->quoteSingleIdentifier($name);
         }
 

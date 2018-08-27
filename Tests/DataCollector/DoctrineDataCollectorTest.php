@@ -1,26 +1,25 @@
 <?php
 
-
 namespace Doctrine\Bundle\DoctrineBundle\Tests\DataCollector;
 
+use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
 
 class DoctrineDataCollectorTest extends TestCase
 {
-    const FIRST_ENTITY = 'TestBundle\Test\Entity\Test1';
+    const FIRST_ENTITY  = 'TestBundle\Test\Entity\Test1';
     const SECOND_ENTITY = 'TestBundle\Test\Entity\Test2';
 
     public function testCollectEntities()
     {
-        $manager = $this->getMockBuilder('Doctrine\ORM\EntityManager')->disableOriginalConstructor()->getMock();
-        $config = $this->getMockBuilder('Doctrine\ORM\Configuration')->getMock();
-        $factory = $this->getMockBuilder('Doctrine\Common\Persistence\Mapping\AbstractClassMetadataFactory')
-            ->setMethods(array('getLoadedMetadata'))->getMockForAbstractClass();
-        $collector = $this->createCollector(array('default' => $manager));
+        $manager   = $this->getMockBuilder('Doctrine\ORM\EntityManager')->disableOriginalConstructor()->getMock();
+        $config    = $this->getMockBuilder('Doctrine\ORM\Configuration')->getMock();
+        $factory   = $this->getMockBuilder('Doctrine\Common\Persistence\Mapping\AbstractClassMetadataFactory')
+            ->setMethods(['getLoadedMetadata'])->getMockForAbstractClass();
+        $collector = $this->createCollector(['default' => $manager]);
 
         $manager->expects($this->any())
             ->method('getMetadataFactory')
@@ -35,11 +34,11 @@ class DoctrineDataCollectorTest extends TestCase
                 ->will($this->returnValue(false));
         }
 
-        $metadatas = array(
+        $metadatas = [
             $this->createEntityMetadata(self::FIRST_ENTITY),
             $this->createEntityMetadata(self::SECOND_ENTITY),
             $this->createEntityMetadata(self::FIRST_ENTITY),
-        );
+        ];
         $factory->expects($this->once())
             ->method('getLoadedMetadata')
             ->will($this->returnValue($metadatas));
@@ -51,6 +50,40 @@ class DoctrineDataCollectorTest extends TestCase
         $this->assertCount(2, $entities['default']);
     }
 
+    public function testGetGroupedQueries()
+    {
+        $logger            = $this->getMockBuilder('Doctrine\DBAL\Logging\DebugStack')->getMock();
+        $logger->queries   = [];
+        $logger->queries[] = [
+            'sql' => 'SELECT * FROM foo WHERE bar = :bar',
+            'params' => [':bar' => 1],
+            'executionMS' => 32,
+        ];
+        $logger->queries[] = [
+            'sql' => 'SELECT * FROM foo WHERE bar = :bar',
+            'params' => [':bar' => 2],
+            'executionMS' => 25,
+        ];
+        $collector         = $this->createCollector([]);
+        $collector->addLogger('default', $logger);
+        $collector->collect(new Request(), new Response());
+        $groupedQueries = $collector->getGroupedQueries();
+        $this->assertCount(1, $groupedQueries['default']);
+        $this->assertSame('SELECT * FROM foo WHERE bar = :bar', $groupedQueries['default'][0]['sql']);
+        $this->assertSame(2, $groupedQueries['default'][0]['count']);
+
+        $logger->queries[] = [
+            'sql' => 'SELECT * FROM bar',
+            'params' => [],
+            'executionMS' => 25,
+        ];
+        $collector->collect(new Request(), new Response());
+        $groupedQueries = $collector->getGroupedQueries();
+        $this->assertCount(2, $groupedQueries['default']);
+        $this->assertSame('SELECT * FROM bar', $groupedQueries['default'][1]['sql']);
+        $this->assertSame(1, $groupedQueries['default'][1]['count']);
+    }
+
     /**
      * @param string $entityFQCN
      *
@@ -58,8 +91,8 @@ class DoctrineDataCollectorTest extends TestCase
      */
     private function createEntityMetadata($entityFQCN)
     {
-        $metadata = new ClassMetadataInfo($entityFQCN);
-        $metadata->name = $entityFQCN;
+        $metadata            = new ClassMetadataInfo($entityFQCN);
+        $metadata->name      = $entityFQCN;
         $metadata->reflClass = new \ReflectionClass('stdClass');
 
         return $metadata;
@@ -76,11 +109,11 @@ class DoctrineDataCollectorTest extends TestCase
         $registry
             ->expects($this->any())
             ->method('getConnectionNames')
-            ->will($this->returnValue(array('default' => 'doctrine.dbal.default_connection')));
+            ->will($this->returnValue(['default' => 'doctrine.dbal.default_connection']));
         $registry
             ->expects($this->any())
             ->method('getManagerNames')
-            ->will($this->returnValue(array('default' => 'doctrine.orm.default_entity_manager')));
+            ->will($this->returnValue(['default' => 'doctrine.orm.default_entity_manager']));
         $registry
             ->expects($this->any())
             ->method('getManagers')

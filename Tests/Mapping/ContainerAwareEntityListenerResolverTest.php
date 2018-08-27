@@ -8,19 +8,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ContainerAwareEntityListenerResolverTest extends TestCase
 {
-    /**
-     * @var ContainerAwareEntityListenerResolver
-     */
+    /** @var ContainerAwareEntityListenerResolver */
     private $resolver;
 
-    /**
-     * @var ContainerInterface|\PHPUnit_Framework_MockObject_MockObject
-     */
+    /** @var ContainerInterface|\PHPUnit_Framework_MockObject_MockObject */
     private $container;
 
     protected function setUp()
     {
-        if (!interface_exists('\Doctrine\ORM\Mapping\EntityListenerResolver')) {
+        if (! interface_exists('\Doctrine\ORM\Mapping\EntityListenerResolver')) {
             $this->markTestSkipped('Entity listeners are not supported in this Doctrine version');
         }
 
@@ -32,8 +28,8 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
 
     public function testResolveClass()
     {
-        $className  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $object     = $this->resolver->resolve($className);
+        $className = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $object    = $this->resolver->resolve($className);
 
         $this->assertInstanceOf($className, $object);
         $this->assertSame($object, $this->resolver->resolve($className));
@@ -41,8 +37,8 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
 
     public function testRegisterClassAndResolve()
     {
-        $className  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $object     = new $className();
+        $className = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $object    = new $className();
 
         $this->resolver->register($object);
 
@@ -51,9 +47,9 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
 
     public function testRegisterServiceAndResolve()
     {
-        $className  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $serviceId  = 'app.entity_listener';
-        $object     = new $className();
+        $className = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $serviceId = 'app.entity_listener';
+        $object    = new $className();
 
         $this->resolver->registerService($className, $serviceId);
         $this->container
@@ -79,8 +75,8 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
      */
     public function testRegisterMissingServiceAndResolve()
     {
-        $className  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $serviceId  = 'app.entity_listener';
+        $className = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $serviceId = 'app.entity_listener';
 
         $this->resolver->registerService($className, $serviceId);
         $this->container
@@ -95,8 +91,8 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
 
     public function testClearOne()
     {
-        $className1  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $className2  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener2';
+        $className1 = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $className2 = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener2';
 
         $obj1 = $this->resolver->resolve($className1);
         $obj2 = $this->resolver->resolve($className2);
@@ -118,8 +114,8 @@ class ContainerAwareEntityListenerResolverTest extends TestCase
 
     public function testClearAll()
     {
-        $className1  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
-        $className2  = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener2';
+        $className1 = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener1';
+        $className2 = '\Doctrine\Bundle\DoctrineBundle\Tests\Mapping\EntityListener2';
 
         $obj1 = $this->resolver->resolve($className1);
         $obj2 = $this->resolver->resolve($className2);

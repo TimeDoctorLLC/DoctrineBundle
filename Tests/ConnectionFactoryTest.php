@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Doctrine\Bundle\DoctrineBundle\Tests;
 
 use Doctrine\Bundle\DoctrineBundle\ConnectionFactory;
@@ -14,9 +13,11 @@ class ConnectionFactoryTest extends TestCase
     {
         parent::setUp();
 
-        if (!class_exists('Doctrine\\ORM\\Version')) {
-            $this->markTestSkipped('Doctrine ORM is not available.');
+        if (class_exists('Doctrine\\ORM\\Version')) {
+            return;
         }
+
+        $this->markTestSkipped('Doctrine ORM is not available.');
     }
 
     /**
@@ -55,14 +56,13 @@ class FakeDriver implements Driver
     /**
      * Exception Mock
      *
-     * @var \Doctrine\DBAL\Exception\DriverException
+     * @var DriverException
      */
     public static $exception;
 
     /**
      * This method gets called to determine the database version which in our case leeds to the problem.
      * So we have to fake the exception a driver would normally throw.
-     *
      *
      * @link https://github.com/doctrine/DoctrineBundle/issues/673
      */
@@ -73,6 +73,12 @@ class FakeDriver implements Driver
 
     // ----- below this line follow only dummy methods to satisfy the interface requirements ----
 
+    /**
+     * @param mixed[]     $params
+     * @param string|null $username
+     * @param string|null $password
+     * @param mixed[]     $driverOptions
+     */
     public function connect(array $params, $username = null, $password = null, array $driverOptions = [])
     {
         throw new \Exception('not implemented');
